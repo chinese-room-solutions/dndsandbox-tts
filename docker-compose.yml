@@ -1,0 +1,32 @@
+services:
+  tts:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dndsandbox-tts:latest
+    container_name: dndsandbox-tts
+    ports:
+      - "8100:8100"
+    volumes:
+      # Persist model cache between restarts for faster startup
+      - tts-cache:/root/.cache
+    env_file:
+      - .env
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8100/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  tts-cache:
+    name: dndsandbox-tts-cache
